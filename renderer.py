@@ -12,7 +12,7 @@ class Renderer:
         self.font = pygame.font.SysFont("consolas", 16)
         self.small_font = pygame.font.SysFont("consolas", 13)
 
-    def draw(self, world, agents, player, harmony_value, debug=False, prompt=None):
+    def draw(self, world, agents, player, harmony_value, debug=False, prompt=None, stable=False):
         self._draw_terrain(world)
         self._draw_dynamic_objects(world)
         self._draw_agents(agents)
@@ -20,6 +20,8 @@ class Renderer:
         if debug:
             self._draw_debug(world, agents, player)
         self._draw_hud(harmony_value, prompt)
+        if stable:
+            self._draw_stable_message()
 
     def _draw_terrain(self, world):
         for y in range(s.MAP_HEIGHT):
@@ -79,6 +81,26 @@ class Renderer:
                               p.get_width() + 12, p.get_height() + 6)
             pygame.draw.rect(self.screen, (20, 20, 20), bg)
             self.screen.blit(p, (bg.x + 6, bg.y + 3))
+
+    def _draw_stable_message(self):
+        """GDD 12.3: the colony has reached its stable configuration."""
+        lines = ["The colony no longer needs your help.", "You understood enough to let it live.", "(R to replay)"]
+        rendered = [self.font.render(line, True, (255, 255, 255)) for line in lines]
+        width = max(r.get_width() for r in rendered) + 40
+        height = sum(r.get_height() for r in rendered) + 30
+
+        overlay = pygame.Surface((s.SCREEN_WIDTH, s.SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 140))
+        self.screen.blit(overlay, (0, 0))
+
+        box = pygame.Rect(0, 0, width, height)
+        box.center = (s.SCREEN_WIDTH // 2, s.SCREEN_HEIGHT // 2)
+        pygame.draw.rect(self.screen, (25, 25, 25), box, border_radius=8)
+
+        y = box.top + 15
+        for r in rendered:
+            self.screen.blit(r, (box.centerx - r.get_width() // 2, y))
+            y += r.get_height()
 
     def _draw_debug(self, world, agents, player):
         lines = [
